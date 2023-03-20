@@ -188,4 +188,35 @@ defmodule AssetTrackerTest do
                }
     end
   end
+
+  #   unrealized_gain_or_loss/3: Accepts an AssetTracker, an asset symbol (string) and a
+  # market_price (integer). Returns the total unrealized capital gain or loss for the asset.
+
+  describe "unrealized_gain_or_loss" do
+    test "given an asset when, call the unrealized_gain_or_loss, then return gain or loss" do
+      today = DateTime.utc_now()
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> unrealized_gain_or_loss("STN", 12) == 90
+    end
+
+    test "given a list of assets when, call the unrealized_gain_or_loss, then return gain or loss" do
+      today = DateTime.utc_now()
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_purchase("STN", today, 20, 30)
+             |> unrealized_gain_or_loss("STN", 12) == -270
+    end
+
+    test "throw error when try to sell an asset that user does not have " do
+      today = DateTime.utc_now()
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_purchase("STN", today, 20, 30)
+             |> unrealized_gain_or_loss("pumpkin", 12) == {:error, "You don`t have this asset"}
+    end
+  end
 end

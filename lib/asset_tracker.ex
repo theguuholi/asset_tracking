@@ -108,4 +108,21 @@ defmodule AssetTracker do
       {unit_prices, new_assets_list}
     end
   end
+
+  def unrealized_gain_or_loss(asset_tracker, symbol, market_price) do
+    asset_tracker.assets
+    |> Map.get(symbol, {:error, "You don`t have this asset"})
+    |> check_unrealized_gain_or_loss(market_price)
+  end
+
+  defp check_unrealized_gain_or_loss({:error, _} = err, _), do: err
+
+  defp check_unrealized_gain_or_loss(assets, market_price) do
+    assets
+    |> Enum.map(fn asset ->
+      value = market_price - asset.unit_price
+      value * asset.quantity
+    end)
+    |> Enum.sum()
+  end
 end
