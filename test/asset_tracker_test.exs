@@ -7,7 +7,7 @@ defmodule AssetTrackerTest do
   end
 
   test "add_purchase/5" do
-    today = Date.utc_today()
+    today = DateTime.utc_now()
 
     assert add_purchase(new(), "STN", today, 10, 3) == %AssetTracker{
              assets: %{
@@ -23,7 +23,7 @@ defmodule AssetTrackerTest do
   end
 
   test "add_purchase/5 add twice same assets" do
-    today = Date.utc_today()
+    today = DateTime.utc_now()
 
     assert new()
            |> add_purchase("STN", today, 10, 3)
@@ -47,7 +47,7 @@ defmodule AssetTrackerTest do
   end
 
   test "add_purchase/5 with different symbol" do
-    today = Date.utc_today()
+    today = DateTime.utc_now()
 
     assert new()
            |> add_purchase("STN", today, 10, 3)
