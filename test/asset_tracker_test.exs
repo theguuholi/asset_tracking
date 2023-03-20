@@ -74,4 +74,87 @@ defmodule AssetTrackerTest do
                }
     end
   end
+
+  describe "add_sale" do
+    # calculate assets twice when try to sell
+    # sell the assets
+
+    test "given an asset that user does not have, when try to sell more than has, throw error message" do
+      today = DateTime.utc_now()
+      sell_date = today |> DateTime.add(1, :day)
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_sale("STN", sell_date, 13, 6) == {:error, "You don`t enough assets to sell"}
+    end
+
+    test "given an asset that user does not have, when try to sell, throw error message" do
+      today = DateTime.utc_now()
+      sell_date = today |> DateTime.add(1, :day)
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_sale("APP", sell_date, 3, 6) == {:error, "You don`t have this asset to sell"}
+    end
+
+    test "given an asset, when sell, return how much was lost" do
+      today = DateTime.utc_now()
+      sell_date = today |> DateTime.add(1, :day)
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_sale("STN", sell_date, 3, 1) ==
+               %AssetTracker{
+                 assets: %{
+                   "STN" => [
+                     %{
+                       settle_date: today,
+                       quantity: 7,
+                       unit_price: 3
+                     }
+                   ]
+                 },
+                 sell: %{
+                   "STN" => [
+                     %{
+                       sell_date: sell_date,
+                       quantity: 3,
+                       unit_price: 1,
+                       result: -6
+                     }
+                   ]
+                 }
+               }
+    end
+
+    test "given an asset, when sell, return how much was gained" do
+      today = DateTime.utc_now()
+      sell_date = today |> DateTime.add(1, :day)
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_sale("STN", sell_date, 3, 6) ==
+               %AssetTracker{
+                 assets: %{
+                   "STN" => [
+                     %{
+                       settle_date: today,
+                       quantity: 7,
+                       unit_price: 3
+                     }
+                   ]
+                 },
+                 sell: %{
+                   "STN" => [
+                     %{
+                       sell_date: sell_date,
+                       quantity: 3,
+                       unit_price: 6,
+                       result: 9
+                     }
+                   ]
+                 }
+               }
+    end
+  end
 end
