@@ -127,6 +127,37 @@ defmodule AssetTrackerTest do
                }
     end
 
+    test "given an asset, when sell over the quantity, then return the sell" do
+      today = DateTime.utc_now()
+      sell_date = today |> DateTime.add(1, :day)
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_purchase("STN", sell_date, 10, 4)
+             |> add_sale("STN", sell_date, 13, 6) ==
+               %AssetTracker{
+                 assets: %{
+                   "STN" => [
+                     %{
+                       settle_date: sell_date,
+                       quantity: 7,
+                       unit_price: 4
+                     }
+                   ]
+                 },
+                 sell: %{
+                   "STN" => [
+                     %{
+                       sell_date: sell_date,
+                       quantity: 13,
+                       unit_price: 6,
+                       result: 45.5
+                     }
+                   ]
+                 }
+               }
+    end
+
     test "given an asset, when sell, return how much was gained" do
       today = DateTime.utc_now()
       sell_date = today |> DateTime.add(1, :day)
