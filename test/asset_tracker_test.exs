@@ -127,6 +127,37 @@ defmodule AssetTrackerTest do
                }
     end
 
+    test "given an asset, when sell over the quantity, then return the sell" do
+      today = DateTime.utc_now()
+      sell_date = today |> DateTime.add(1, :day)
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_purchase("STN", sell_date, 10, 4)
+             |> add_sale("STN", sell_date, 13, 6) ==
+               %AssetTracker{
+                 assets: %{
+                   "STN" => [
+                     %{
+                       settle_date: sell_date,
+                       quantity: 7,
+                       unit_price: 4
+                     }
+                   ]
+                 },
+                 sell: %{
+                   "STN" => [
+                     %{
+                       sell_date: sell_date,
+                       quantity: 13,
+                       unit_price: 6,
+                       result: 32.5
+                     }
+                   ]
+                 }
+               }
+    end
+
     test "given an asset, when sell, return how much was gained" do
       today = DateTime.utc_now()
       sell_date = today |> DateTime.add(1, :day)
@@ -155,6 +186,37 @@ defmodule AssetTrackerTest do
                    ]
                  }
                }
+    end
+  end
+
+  #   unrealized_gain_or_loss/3: Accepts an AssetTracker, an asset symbol (string) and a
+  # market_price (integer). Returns the total unrealized capital gain or loss for the asset.
+
+  describe "unrealized_gain_or_loss" do
+    test "given an asset when, call the unrealized_gain_or_loss, then return gain or loss" do
+      today = DateTime.utc_now()
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> unrealized_gain_or_loss("STN", 12) == 90
+    end
+
+    test "given a list of assets when, call the unrealized_gain_or_loss, then return gain or loss" do
+      today = DateTime.utc_now()
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_purchase("STN", today, 20, 30)
+             |> unrealized_gain_or_loss("STN", 12) == -270
+    end
+
+    test "throw error when try to sell an asset that user does not have " do
+      today = DateTime.utc_now()
+
+      assert new()
+             |> add_purchase("STN", today, 10, 3)
+             |> add_purchase("STN", today, 20, 30)
+             |> unrealized_gain_or_loss("pumpkin", 12) == {:error, "You don`t have this asset"}
     end
   end
 end
