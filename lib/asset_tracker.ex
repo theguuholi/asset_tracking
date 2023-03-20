@@ -59,6 +59,7 @@ defmodule AssetTracker do
   end
 
   defp calculate_result(unit_price_bought, quantity_sold, unit_price_sold) do
+    unit_price_bought = Enum.sum(unit_price_bought) / length(unit_price_bought)
     quantity_sold * (unit_price_sold - unit_price_bought)
   end
 
@@ -69,14 +70,42 @@ defmodule AssetTracker do
   defp check_assets_status_and_sell(nil, _), do: :pop
 
   defp check_assets_status_and_sell(assets, quantity_sold) do
-    asset = hd(assets)
+    total_quantity = Enum.reduce(assets, 0, &(&1.quantity + &2))
 
-    if quantity_sold > asset.quantity do
+    if quantity_sold > total_quantity do
       {:not_enough_quantity, assets}
     else
-      new_quantity_sold = asset.quantity - quantity_sold
-      new_value = [Map.put(asset, :quantity, new_quantity_sold)]
-      {asset.unit_price, new_value}
+      {unit_prices, new_assets_list, _} =
+        Enum.reduce(assets, {[], [], quantity_sold}, fn asset,
+                                                        {unit_prices, new_assets_list,
+                                                         quantity_missing_to_sell} ->
+          cond do
+            quantity_missing_to_sell == 0 ->
+              {unit_prices, new_assets_list ++ [asset], quantity_missing_to_sell}
+
+            asset.quantity == quantity_missing_to_sell ->
+              {unit_prices ++ [asset.unit_price], new_assets_list, quantity_sold}
+
+            asset.quantity > quantity_missing_to_sell ->
+              new_quantity_sold = quantity_missing_to_sell - asset.quantity
+              new_value = [Map.put(asset, :quantity, asset.quantity - quantity_missing_to_sell)]
+
+              {unit_prices ++ [asset.unit_price], new_assets_list ++ new_value, new_quantity_sold}
+
+            quantity_missing_to_sell > asset.quantity ->
+              new_quantity_sold = quantity_missing_to_sell - asset.quantity
+
+              {unit_prices ++ [asset.unit_price], new_assets_list, new_quantity_sold}
+
+            quantity_missing_to_sell < asset.quantity ->
+              new_quantity_sold = quantity_missing_to_sell - asset.quantity
+              new_value = [Map.put(asset, :quantity, asset.quantity - quantity_missing_to_sell)]
+
+              {unit_prices ++ [asset.unit_price], new_assets_list ++ new_value, new_quantity_sold}
+          end
+        end)
+
+      {unit_prices, new_assets_list}
     end
   end
 end

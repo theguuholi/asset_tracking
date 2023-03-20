@@ -151,7 +151,7 @@ defmodule AssetTrackerTest do
                        sell_date: sell_date,
                        quantity: 13,
                        unit_price: 6,
-                       result: 45.5
+                       result: 32.5
                      }
                    ]
                  }
